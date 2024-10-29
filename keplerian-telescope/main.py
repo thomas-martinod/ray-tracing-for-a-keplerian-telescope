@@ -35,7 +35,7 @@ def interpolate(r, g, b):
 
 def main():
     print("Which celestial object would you like to view?")
-    print("Options: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Moon")
+    print("Options: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus")
     
     choice = input("Enter the name of the object: ").strip().capitalize()
 
@@ -47,9 +47,7 @@ def main():
         "Mars": "Mars.jpg",
         "Jupiter": "Jupiter.jpg",
         "Saturn": "Saturn.jpg",
-        "Uranus": "Uranus.jpg",
-        "Neptune": "Neptune.jpg",
-        "Moon": "Moon.jpg"
+        "Uranus": "Uranus.jpg"
     }
 
     aberration = input("Correct Aberration? (y/n): ").strip().capitalize()
@@ -83,12 +81,12 @@ def main():
                 r_image, g_image, b_image = interpolate(r, g, b)
             
                 # Fusiona los canales de nuevo en una imagen RGB
-                IMAGENSOTA = Image.merge("RGB", (r_image, g_image, b_image))
+                Output_image = Image.merge("RGB", (r_image, g_image, b_image))
 
                 # Muestra la imagen procesada
-                ut.imageShow([object, IMAGENSOTA], [f"Original {choice} Image", f'Processed {choice} Image'])
+                ut.imageShow([object, Output_image], [f"Original {choice} Image", f'Processed {choice} Image'])
 
-                ut.imageSave(IMAGENSOTA, choice)    
+                ut.imageSave(Output_image, choice)    
             elif aberration == "Y":
                 refraction_NPK51_1, _, _, refraction_NPK51_2, _, _= get_aberration_data()
                 magni = -refraction_NPK51_1["f"]/refraction_NPK51_2["f"]
