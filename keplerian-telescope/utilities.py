@@ -2,9 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 from scipy.interpolate import griddata
-
 import os
-
+from data import get_data
+import matrix_calculator as mc
+import math
 
 def imageRead(namefile):
     image = Image.open(namefile)
@@ -33,6 +34,10 @@ def imageSave(image, choice):
     image.save(save_path)
     print(f"Image saved with aberrations at {save_path}")
 
+def format_image(path):
+    img = imageRead(path)
+    blue, green, red = img.split()
+    return blue, green, red
 
 
 def interpolate_nan(array):
@@ -57,5 +62,44 @@ def interpolate_nan(array):
     interpolated_array = np.nan_to_num(interpolated_array, nan=0)
     return interpolated_array
 
-def correct_aberration():
-    pass
+def ray_tracing(object, width_output, height_output, M_system):
+    width, height = object.size
+    alpha_entrada = 0
+
+    image = Image.new("L", (width_output, height_output), "white")
+    pixels = image.load()
+
+    for pos_x in range(width):
+        for pos_y in range(height):
+            pixel = object.getpixel((pos_x, pos_y))
+            x = pos_x - width / 2
+            y = pos_y - height / 2
+
+            r = math.sqrt(x * x + y * y) + 1
+            theta = math.atan2(y, x)
+
+            y_objeto = r
+            v_input = np.array([alpha_entrada, y_objeto])
+
+            v_output = np.dot(M_system.T, v_input)
+            r_prime = v_output[1]
+
+            pos_x_prime = int(r_prime * math.cos(theta) + width_output / 2)
+            pos_y_prime = int(r_prime * math.sin(theta) + height_output / 2)
+
+            if 0 <= pos_x_prime < width_output and 0 <= pos_y_prime < height_output:
+                pixels[pos_x_prime, pos_y_prime] = pixel
+
+    return image
+
+def keplerian_ray_tracing(object, width_output, height_output, color, n_air=1.0003):
+    objective_lens, eyepiece_lens, rgb, refraction_NBK7, apocromat = get_data()
+    M_system = mc.simple_system(n_in=refraction_NBK7[color], n_out=n_air, objective=objective_lens, eyepiece=eyepiece_lens)
+    img = ray_tracing(object, width_output, height_output, M_system)
+    return img
+
+
+def correct_aberration(object, width_output, height_output, color, n_air=1.0003):
+    objective_lens, eyepiece_lens, rgb, refraction_NBK7, apocromat = get_data()
+    M_system = mc.apocromat(R1: float, R2: float, R3: float, R4: float, thickness1: float, thickness2: float, thickness3: float, n_out:float, n1: float, n2:float, n3:float)
+    img = ray_tracing(object, width_output, height_output, M_system)
