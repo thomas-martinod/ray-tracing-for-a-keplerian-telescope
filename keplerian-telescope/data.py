@@ -1,17 +1,17 @@
 def get_data():
     objective_lens = {
-        "R": 772, # mm
-        "T": 3, # mm
-        "D": 50.8, #mm
-        "f": 750 #mm
-        }
+        "R": 205.0,  # Reduced radius of curvature
+        "T": 6.2,  # Thickness
+        "D": 50.8,  # Diameter
+        "f": 200  # Reduced focal length to 200 mm
+    }
 
     eyepiece_lens = {
-        "R": 19.9, # mm
-        "T": 3.9, # mm
-        "D": 12.7, #mm
-        "f": 20 #mm
-        }
+        "R": 25.2,  # Slightly increased radius of curvature
+        "T": 3.4,  # Thickness
+        "D": 12.7,  # Diameter
+        "f": 25.0 # focal length for lower magnification
+    }
 
     rgb = {
         "R" : 645e-6,
@@ -19,16 +19,10 @@ def get_data():
         "B" : 440e-6
     }
 
-    refraction_crown = {
-        "R" : 1.509137,
-        "G" : 1.515446,
-        "B" : 1.52094
+    refraction_NBK7 = {
+        "R" : 1.5147,
+        "G" : 1.5208,
+        "B" : 1.5263
     }
-    
 
-    # refraction_crown = {
-    #     "R" : 0.0000001,
-    #     "G" : 1.515446,
-    #     "B" : 100.52094
-    # }
-    return objective_lens, eyepiece_lens, rgb, refraction_crown
+    return objective_lens, eyepiece_lens, rgb, refraction_NBK7

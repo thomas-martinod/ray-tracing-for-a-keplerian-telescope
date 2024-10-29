@@ -21,8 +21,8 @@ def keplerian_ray_tracing(object, width_output, height_output, color, n_air=1.00
     width, height = object.size
 
     # Load lens data and matrices
-    objective_lens, eyepiece_lens, rgb, refraction_crown = get_data()
-    M_system = mc.simple_system(n_in=refraction_crown[color], n_out=n_air, objective=objective_lens, eyepiece=eyepiece_lens)
+    objective_lens, eyepiece_lens, rgb, refraction_NBK7 = get_data()
+    M_system = mc.simple_system(n_in=refraction_NBK7[color], n_out=n_air, objective=objective_lens, eyepiece=eyepiece_lens)
 
     # Define the initial angle for ray input
     alpha_entrada = 0
@@ -63,60 +63,83 @@ def keplerian_ray_tracing(object, width_output, height_output, color, n_air=1.00
 
 
 def main():
-    obj, eye, rgb, refraction = get_data()
-
-    object = ut.imageRead("keplerian-telescope/figs/Full_Moon.jpg")
-    magni = 5
-
-    width, height = object.size
-
-    width_output = int(width*(abs(magni)))
-    height_output = int(height*(abs(magni)))
-
-    red, green, blue = object.split()
-
-    # Create new Image and a Pixel Map
-    image = Image.new("RGB", (height_output, height_output), "white")
-    pixels = image.load()
-
-    # Process each color channel through ray tracing, applying magnification and inversion
-    b, bp = keplerian_ray_tracing(blue, width_output, height_output, "B", n_air=1.0003, aberration=False)
-    r, rp = keplerian_ray_tracing(red, width_output, height_output, "R",  n_air=1.0003, aberration=False)
-    g, gp = keplerian_ray_tracing(green, width_output, height_output, "G", n_air=1.0003, aberration=False)
-
-
-    # Convierte cada canal a escala de grises antes de fusionarlos
-    r_gray = r.convert("L")
-    g_gray = g.convert("L")
-    b_gray = b.convert("L")
-
-    r_array = np.array(r_gray, dtype=float)
-    g_array = np.array(g_gray, dtype=float)
-    b_array = np.array(b_gray, dtype=float)
-
-    # Replace white spaces with NaN (assuming 255 as white space, change if different)
-    r_array[r_array == 255] = np.nan
-    g_array[g_array == 255] = np.nan
-    b_array[b_array == 255] = np.nan
-
-    # Apply interpolation to each grayscale channel
-    r_filled = ut.interpolate_nan(r_array)
-    g_filled = ut.interpolate_nan(g_array)
-    b_filled = ut.interpolate_nan(b_array)
-
-
-    # Convert to image
-    r_image = Image.fromarray(r_filled.astype(np.uint8))
-    g_image = Image.fromarray(g_filled.astype(np.uint8))
-    b_image = Image.fromarray(b_filled.astype(np.uint8))
+    print("Which celestial object would you like to view?")
+    print("Options: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Moon")
     
-    # Fusiona los canales de nuevo en una imagen RGB
-    IMAGENSOTA = Image.merge("RGB", (r_image, g_image, b_image))
+    choice = input("Enter the name of the object: ").strip().capitalize()
 
-    # Muestra la imagen procesada
-    ut.imageShow(IMAGENSOTA, 'Processed Jupiter Image')
+    # Define the directory path and the available images
+    image_directory = "keplerian-telescope/figs/"
+    celestial_objects = {
+        "Mercury": "Mercury.jpg",
+        "Venus": "Venus.jpg",
+        "Earth": "Earth.jpg",
+        "Mars": "Mars.jpg",
+        "Jupiter": "Jupiter.jpg",
+        "Saturn": "Saturn.jpg",
+        "Uranus": "Uranus.jpg",
+        "Neptune": "Neptune.jpg",
+        "Moon": "Moon.jpg"
+    }
+
+    if choice in celestial_objects:
+        image_path = image_directory + celestial_objects[choice]
+        print(f"Loading image for {choice} from {image_path}")
+        objective_lens, eyepiece_lens, _, _ = get_data()
+
+        object = ut.imageRead(image_path)
+
+        magni = -objective_lens["f"]/eyepiece_lens["f"]
+
+        width, height = object.size
+
+        width_output = int(width*(abs(magni)))
+        height_output = int(height*(abs(magni)))
+
+        red, green, blue = object.split()
 
 
+        # Process each color channel through ray tracing, applying magnification and inversion
+        b, bp = keplerian_ray_tracing(blue, width_output, height_output, "B", n_air=1.0003)
+        r, rp = keplerian_ray_tracing(red, width_output, height_output, "R",  n_air=1.0003)
+        g, gp = keplerian_ray_tracing(green, width_output, height_output, "G", n_air=1.0003, aberration=False)
 
+        # Convierte cada canal a escala de grises antes de fusionarlos
+        r_gray = r.convert("L")
+        g_gray = g.convert("L")
+        b_gray = b.convert("L")
+
+        r_array = np.array(r_gray, dtype=float)
+        g_array = np.array(g_gray, dtype=float)
+        b_array = np.array(b_gray, dtype=float)
+
+        # Replace white spaces with NaN (assuming 255 as white space, change if different)
+        r_array[r_array == 255] = np.nan
+        g_array[g_array == 255] = np.nan
+        b_array[b_array == 255] = np.nan
+
+        # Apply interpolation to each grayscale channel
+        r_filled = ut.interpolate_nan(r_array)
+        g_filled = ut.interpolate_nan(g_array)
+        b_filled = ut.interpolate_nan(b_array)
+
+
+        # Convert to image
+        r_image = Image.fromarray(r_filled.astype(np.uint8))
+        g_image = Image.fromarray(g_filled.astype(np.uint8))
+        b_image = Image.fromarray(b_filled.astype(np.uint8))
+        
+        # Fusiona los canales de nuevo en una imagen RGB
+        IMAGENSOTA = Image.merge("RGB", (r_image, g_image, b_image))
+
+        # Muestra la imagen procesada
+        ut.imageShow([object, IMAGENSOTA], [f"Original {choice} Image", f'Processed {choice} Image'])
+
+        ut.imageSave(IMAGENSOTA, choice)
+
+    else:
+        print("Invalid choice. Please restart the program and select a valid celestial object.")
+        return
+    
 
 main()
