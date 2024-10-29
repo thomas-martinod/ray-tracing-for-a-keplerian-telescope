@@ -1,0 +1,5 @@
+[{"Planeta":"Venus",   "so":360, "res":0.8, "ruta":"C:Imaging\\Venus.jpg"},
+ {"Planeta":"Luna",    "so":360, "res":0.5, "ruta":"C:Imaging\\Full_Moon.jpg"},
+ {"Planeta":"Marte",   "so":360, "res":0.9, "ruta":"C:Imaging\\Marte.jpg"},
+ {"Planeta":"Jupiter", "so":360, "res":0.3, "ruta":"C:Imaging\\Jupiter.jpg"}
+]
