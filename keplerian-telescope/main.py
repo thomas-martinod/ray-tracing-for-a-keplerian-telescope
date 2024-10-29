@@ -1,65 +1,7 @@
-import matrix_calculator as mc
 import utilities as ut
 from data import get_data
-
-
 import numpy as np
-import math
 from PIL import Image
-
-def format_image(path):
-    img = ut.imageRead(path)
-    blue, green, red = img.split()
-    # ut.imageShow(blue, 'blue channel')
-    # ut.imageShow(green,'green channel')
-    # ut.imageShow(red, 'red channel')
-    return blue, green, red
-
-
-
-def keplerian_ray_tracing(object, width_output, height_output, color, n_air=1.0003, aberration=False):
-    width, height = object.size
-
-    # Load lens data and matrices
-    objective_lens, eyepiece_lens, rgb, refraction_NBK7 = get_data()
-    M_system = mc.simple_system(n_in=refraction_NBK7[color], n_out=n_air, objective=objective_lens, eyepiece=eyepiece_lens)
-
-    # Define the initial angle for ray input
-    alpha_entrada = 0
-
-    # Create a new grayscale Image and Pixel Map for each color channel
-    image = Image.new("L", (width_output, height_output), "white")
-    pixels = image.load()
-
-    # Iterate over each pixel of the input image
-    for pos_x in range(width):
-        for pos_y in range(height):
-            # Get pixel and calculate relative position to the center
-            pixel = object.getpixel((pos_x, pos_y))
-            x = pos_x - width / 2
-            y = pos_y - height / 2
-
-            # Calculate distance from center and angle theta
-            r = math.sqrt(x * x + y * y) + 1  # Avoid zero radius issues
-            theta = math.atan2(y, x)  # Angle from the center to (x, y)
-
-            # Input vector (angle and distance to object in real-world units)
-            y_objeto = r
-            v_input = np.array([alpha_entrada, y_objeto])
-
-            # Apply transformations for ray tracing
-            v_output = np.dot(M_system.T, v_input)
-            r_prime = v_output[1]
-
-            # Coordinate transformation to output image space
-            pos_x_prime = int(r_prime * math.cos(theta) + width_output / 2)
-            pos_y_prime = int(r_prime * math.sin(theta) + height_output / 2)
-
-            # Check bounds before setting pixel to avoid errors
-            if 0 <= pos_x_prime < width_output and 0 <= pos_y_prime < height_output:
-                pixels[pos_x_prime, pos_y_prime] = pixel
-
-    return image, pixels
 
 
 def main():
@@ -68,7 +10,6 @@ def main():
     
     choice = input("Enter the name of the object: ").strip().capitalize()
 
-    # Define the directory path and the available images
     image_directory = "keplerian-telescope/figs/"
     celestial_objects = {
         "Mercury": "Mercury.jpg",
@@ -85,7 +26,7 @@ def main():
     if choice in celestial_objects:
         image_path = image_directory + celestial_objects[choice]
         print(f"Loading image for {choice} from {image_path}")
-        objective_lens, eyepiece_lens, _, _ = get_data()
+        objective_lens, eyepiece_lens, _, _, _ = get_data()
 
         object = ut.imageRead(image_path)
 
@@ -98,11 +39,9 @@ def main():
 
         red, green, blue = object.split()
 
-
-        # Process each color channel through ray tracing, applying magnification and inversion
-        b, bp = keplerian_ray_tracing(blue, width_output, height_output, "B", n_air=1.0003)
-        r, rp = keplerian_ray_tracing(red, width_output, height_output, "R",  n_air=1.0003)
-        g, gp = keplerian_ray_tracing(green, width_output, height_output, "G", n_air=1.0003, aberration=False)
+        b = ut.keplerian_ray_tracing(blue, width_output, height_output, "B", n_air=1.0003)
+        r = ut.keplerian_ray_tracing(red, width_output, height_output, "R",  n_air=1.0003)
+        g = ut.keplerian_ray_tracing(green, width_output, height_output, "G", n_air=1.0003)
 
         # Convierte cada canal a escala de grises antes de fusionarlos
         r_gray = r.convert("L")
@@ -135,7 +74,7 @@ def main():
         # Muestra la imagen procesada
         ut.imageShow([object, IMAGENSOTA], [f"Original {choice} Image", f'Processed {choice} Image'])
 
-        ut.imageSave(IMAGENSOTA, choice)
+        ut.imageSave(IMAGENSOTA, choice)    
 
     else:
         print("Invalid choice. Please restart the program and select a valid celestial object.")

@@ -1,3 +1,4 @@
+import numpy as np
 def get_data():
     objective_lens = {
         "R": 205.0,  # Reduced radius of curvature
@@ -25,4 +26,14 @@ def get_data():
         "B" : 1.5263
     }
 
-    return objective_lens, eyepiece_lens, rgb, refraction_NBK7
+    apocromat = {
+        "R1": 200,
+        "R2": 200,
+        "R3": 200,
+        "R4": np.inf,
+        ""
+
+
+    }
+
+    return objective_lens, eyepiece_lens, rgb, refraction_NBK7, apocromat
