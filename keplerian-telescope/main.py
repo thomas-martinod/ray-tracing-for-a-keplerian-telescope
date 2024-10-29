@@ -2,6 +2,7 @@ import utilities as ut
 from data import get_data
 import numpy as np
 from PIL import Image
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -82,9 +83,9 @@ def main():
 
         print("Correcting Aberrations")
         if aberration in options:
-            b_a = ut.correct_aberration(blue, width_output, height_output, "B", n_air=1.0003)
-            r_a = ut.correct_aberration(red, width_output, height_output, "R",  n_air=1.0003)
-            g_a = ut.correct_aberration(green, width_output, height_output, "G", n_air=1.0003)
+            b_a = ut.correct_aberration(b_image, width_output, height_output, "B", n_air=1.0003)
+            r_a = ut.correct_aberration(r_image, width_output, height_output, "R",  n_air=1.0003)
+            g_a = ut.correct_aberration(g_image, width_output, height_output, "G", n_air=1.0003)
 
             corrected = Image.merge("RGB", (r_a, g_a, b_a))
 

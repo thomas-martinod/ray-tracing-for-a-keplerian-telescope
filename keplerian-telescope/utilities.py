@@ -20,7 +20,7 @@ def imageShow(images, titles):
     for i in range(num_images):
         axs[i].imshow(images[i])
         axs[i].set_title(titles[i])
-        axs[i].axis('off')  # Hide the axis
+        axs[i].axis('on')  # Hide the axis
 
     plt.tight_layout()  # Adjust layout to prevent overlap
     plt.show()
