@@ -25,8 +25,10 @@ def imageShow(images, titles):
     plt.tight_layout()  # Adjust layout to prevent overlap
     plt.show()
 
-def imageSave(image, choice):
+def imageSave(image, choice, corrected = False):
     save_directory = "keplerian-telescope/img_with_aberrations/"
+    if corrected == True:
+        save_directory = "keplerian-telescope/img_no_aberrations/"
     if not os.path.exists(save_directory):
         os.makedirs(save_directory)
     save_path = os.path.join(save_directory, f"{choice}.jpg")
@@ -93,13 +95,15 @@ def ray_tracing(object, width_output, height_output, M_system):
     return image
 
 def keplerian_ray_tracing(object, width_output, height_output, color, n_air=1.0003):
-    objective_lens, eyepiece_lens, rgb, refraction_NBK7, apocromat = get_data()
+    objective_lens, eyepiece_lens, _ , refraction_NBK7, _, _, _ = get_data()
     M_system = mc.simple_system(n_in=refraction_NBK7[color], n_out=n_air, objective=objective_lens, eyepiece=eyepiece_lens)
     img = ray_tracing(object, width_output, height_output, M_system)
     return img
 
 
 def correct_aberration(object, width_output, height_output, color, n_air=1.0003):
-    objective_lens, eyepiece_lens, rgb, refraction_NBK7, apocromat = get_data()
-    M_system = mc.apocromat(R1: float, R2: float, R3: float, R4: float, thickness1: float, thickness2: float, thickness3: float, n_out:float, n1: float, n2:float, n3:float)
+    _, _, _, _, refraction_NPK51, refraction_NKZFS4, refraction_SF15  = get_data()
+    M_system = mc.apocromat(refraction_NPK51["R1"], refraction_NKZFS4["R1"], refraction_SF15["R1"], refraction_SF15["R2"], refraction_NPK51["T"], refraction_NKZFS4["T"], refraction_SF15["T"],n_air, refraction_NPK51[color], refraction_NKZFS4[color], refraction_SF15[color])
     img = ray_tracing(object, width_output, height_output, M_system)
+    return img
+

@@ -23,10 +23,14 @@ def main():
         "Moon": "Moon.jpg"
     }
 
+    aberration = input("Correct Aberration? (y/n): ").strip().capitalize()
+
+    options = ["Y", "N"]
+
     if choice in celestial_objects:
         image_path = image_directory + celestial_objects[choice]
         print(f"Loading image for {choice} from {image_path}")
-        objective_lens, eyepiece_lens, _, _, _ = get_data()
+        objective_lens, eyepiece_lens, _, _, _, _, _ = get_data()
 
         object = ut.imageRead(image_path)
 
@@ -76,9 +80,23 @@ def main():
 
         ut.imageSave(IMAGENSOTA, choice)    
 
+        print("Correcting Aberrations")
+        if aberration in options:
+            b_a = ut.correct_aberration(blue, width_output, height_output, "B", n_air=1.0003)
+            r_a = ut.correct_aberration(red, width_output, height_output, "R",  n_air=1.0003)
+            g_a = ut.correct_aberration(green, width_output, height_output, "G", n_air=1.0003)
+
+            corrected = Image.merge("RGB", (r_a, g_a, b_a))
+
+            ut.imageShow([object, IMAGENSOTA, corrected], [f"Original {choice} Image", f'Processed {choice} Image', f'Corrected {choice} Image'])
+            ut.imageSave(corrected, choice, corrected = True)  
+
+        else:
+            print("Invalid choice. Please restart the program and select a valis aberration option.")
+            return
+
     else:
         print("Invalid choice. Please restart the program and select a valid celestial object.")
         return
-    
 
 main()

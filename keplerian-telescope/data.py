@@ -26,14 +26,32 @@ def get_data():
         "B" : 1.5263
     }
 
-    apocromat = {
-        "R1": 200,
-        "R2": 200,
-        "R3": 200,
-        "R4": np.inf,
-        ""
-
-
+    refraction_NPK51 = {
+        "R" : 1.5268,
+        "G" : 1.5319,
+        "B" : 1.5367,
+        "Abbe" : 76.97,
+        "R1": 187.74016, 
+        "R2": 221.53356,
+        "T": 4.07773
+    }
+    refraction_NKZFS4 = {
+        "R" : 1.6098,
+        "G" : 1.6202,
+        "B" : 1.6300,
+        "Abbe" : 44.49,
+        "R1": 221.53356, 
+        "R2": 303.86069,
+        "T": 51.70174
+    }
+    refraction_SF15 = {
+        "R" : 1.6932,
+        "G" : 1.7105,
+        "B" : 1.7280,
+        "Abbe" : 30.07,
+        "R1": 303.86069, 
+        "R2": np.inf,
+        "T": 5
     }
 
-    return objective_lens, eyepiece_lens, rgb, refraction_NBK7, apocromat
+    return objective_lens, eyepiece_lens, rgb, refraction_NBK7, refraction_NPK51, refraction_NKZFS4, refraction_SF15
