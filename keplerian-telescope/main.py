@@ -2,7 +2,6 @@ import utilities as ut
 from data import get_data, get_aberration_data
 import numpy as np
 from PIL import Image
-import matplotlib.pyplot as plt
 
 def interpolate(r, g, b):
     # Convierte cada canal a escala de grises antes de fusionarlos
