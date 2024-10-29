@@ -1,8 +1,36 @@
 import utilities as ut
-from data import get_data
+from data import get_data, get_aberration_data
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
+
+def interpolate(r, g, b):
+    # Convierte cada canal a escala de grises antes de fusionarlos
+        r_gray = r.convert("L")
+        g_gray = g.convert("L")
+        b_gray = b.convert("L")
+
+        r_array = np.array(r_gray, dtype=float)
+        g_array = np.array(g_gray, dtype=float)
+        b_array = np.array(b_gray, dtype=float)
+
+        # Replace white spaces with NaN (assuming 255 as white space, change if different)
+        r_array[r_array == 255] = np.nan
+        g_array[g_array == 255] = np.nan
+        b_array[b_array == 255] = np.nan
+
+        # Apply interpolation to each grayscale channel
+        r_filled = ut.interpolate_nan(r_array)
+        g_filled = ut.interpolate_nan(g_array)
+        b_filled = ut.interpolate_nan(b_array)
+
+
+        # Convert to image
+        r_image = Image.fromarray(r_filled.astype(np.uint8))
+        g_image = Image.fromarray(g_filled.astype(np.uint8))
+        b_image = Image.fromarray(b_filled.astype(np.uint8))
+
+        return r_image, g_image, b_image
 
 
 def main():
@@ -28,76 +56,66 @@ def main():
 
     options = ["Y", "N"]
 
-    if choice in celestial_objects:
-        image_path = image_directory + celestial_objects[choice]
-        print(f"Loading image for {choice} from {image_path}")
-        objective_lens, eyepiece_lens, _, _, _, _, _ = get_data()
+    if aberration in options:
+        if choice in celestial_objects:
+            image_path = image_directory + celestial_objects[choice]
+            print(f"Loading image for {choice} from {image_path}")
 
-        object = ut.imageRead(image_path)
+            object = ut.imageRead(image_path)
 
-        magni = -objective_lens["f"]/eyepiece_lens["f"]
+            red, green, blue = object.split()
 
-        width, height = object.size
+            if aberration == "N":
 
-        width_output = int(width*(abs(magni)))
-        height_output = int(height*(abs(magni)))
+                objective_lens, eyepiece_lens, _, _ = get_data()
 
-        red, green, blue = object.split()
+                magni = -objective_lens["f"]/eyepiece_lens["f"]
 
-        b = ut.keplerian_ray_tracing(blue, width_output, height_output, "B", n_air=1.0003)
-        r = ut.keplerian_ray_tracing(red, width_output, height_output, "R",  n_air=1.0003)
-        g = ut.keplerian_ray_tracing(green, width_output, height_output, "G", n_air=1.0003)
+                width, height = object.size
 
-        # Convierte cada canal a escala de grises antes de fusionarlos
-        r_gray = r.convert("L")
-        g_gray = g.convert("L")
-        b_gray = b.convert("L")
+                width_output = int(width*(abs(magni)))
+                height_output = int(height*(abs(magni)))
 
-        r_array = np.array(r_gray, dtype=float)
-        g_array = np.array(g_gray, dtype=float)
-        b_array = np.array(b_gray, dtype=float)
+                b = ut.keplerian_ray_tracing(blue, width_output, height_output, "B", n_air=1.0003)
+                r = ut.keplerian_ray_tracing(red, width_output, height_output, "R",  n_air=1.0003)
+                g = ut.keplerian_ray_tracing(green, width_output, height_output, "G", n_air=1.0003)
 
-        # Replace white spaces with NaN (assuming 255 as white space, change if different)
-        r_array[r_array == 255] = np.nan
-        g_array[g_array == 255] = np.nan
-        b_array[b_array == 255] = np.nan
+                r_image, g_image, b_image = interpolate(r, g, b)
+            
+                # Fusiona los canales de nuevo en una imagen RGB
+                IMAGENSOTA = Image.merge("RGB", (r_image, g_image, b_image))
 
-        # Apply interpolation to each grayscale channel
-        r_filled = ut.interpolate_nan(r_array)
-        g_filled = ut.interpolate_nan(g_array)
-        b_filled = ut.interpolate_nan(b_array)
+                # Muestra la imagen procesada
+                ut.imageShow([object, IMAGENSOTA], [f"Original {choice} Image", f'Processed {choice} Image'])
 
+                ut.imageSave(IMAGENSOTA, choice)    
+            elif aberration == "Y":
+                refraction_NPK51_1, _, _, refraction_NPK51_2, _, _= get_aberration_data()
+                magni = -refraction_NPK51_1["f"]/refraction_NPK51_2["f"]
 
-        # Convert to image
-        r_image = Image.fromarray(r_filled.astype(np.uint8))
-        g_image = Image.fromarray(g_filled.astype(np.uint8))
-        b_image = Image.fromarray(b_filled.astype(np.uint8))
-        
-        # Fusiona los canales de nuevo en una imagen RGB
-        IMAGENSOTA = Image.merge("RGB", (r_image, g_image, b_image))
+                width, height = object.size
 
-        # Muestra la imagen procesada
-        ut.imageShow([object, IMAGENSOTA], [f"Original {choice} Image", f'Processed {choice} Image'])
+                width_output = int(width*(abs(magni)))
+                height_output = int(height*(abs(magni)))
+                
+                print("Correcting Aberrations")
+                b_a = ut.correct_aberration(blue, width_output + 10, height_output + 10, "B", n_air=1.0003)
+                r_a = ut.correct_aberration(red, width_output + 10, height_output +10, "R",  n_air=1.0003)
+                g_a = ut.correct_aberration(green, width_output +10, height_output + 10, "G", n_air=1.0003)
 
-        ut.imageSave(IMAGENSOTA, choice)    
+                r_a, g_a, b_a = interpolate(r_a, g_a, b_a)
 
-        print("Correcting Aberrations")
-        if aberration in options:
-            b_a = ut.correct_aberration(b_image, width_output, height_output, "B", n_air=1.0003)
-            r_a = ut.correct_aberration(r_image, width_output, height_output, "R",  n_air=1.0003)
-            g_a = ut.correct_aberration(g_image, width_output, height_output, "G", n_air=1.0003)
+                corrected = Image.merge("RGB", (r_a, g_a, b_a))
 
-            corrected = Image.merge("RGB", (r_a, g_a, b_a))
-
-            ut.imageShow([object, IMAGENSOTA, corrected], [f"Original {choice} Image", f'Processed {choice} Image', f'Corrected {choice} Image'])
-            ut.imageSave(corrected, choice, corrected = True)  
+                ut.imageShow([object, corrected], [f"Original {choice} Image", f'Corrected {choice} Image'])
+                ut.imageSave(corrected, choice, corrected = True)  
 
         else:
-            print("Invalid choice. Please restart the program and select a valis aberration option.")
+            print("Invalid choice. Please restart the program and select a valid celestial object.")
             return
 
     else:
-        print("Invalid choice. Please restart the program and select a valid celestial object.")
+        print("Invalid choice. Please restart the program and select a valis aberration option.")
         return
 
 main()

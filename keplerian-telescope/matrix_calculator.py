@@ -35,9 +35,15 @@ def simple_system(n_in: float, n_out: float, objective: dict, eyepiece: dict) ->
     return (E @ T) @ O
 
 def apocromat(R1: float, R2: float, R3: float, R4: float, thickness1: float, thickness2: float, thickness3: float, n_out:float, n1: float, n2:float, n3:float):
-    O = thick_lens(n_out, n1, n2, R1, R2, thickness1)
-    T = thick_lens(n1, n2, n3, R2, R3, thickness2)
-    E = thick_lens(n2, n3, n_out, R3, R4, thickness3)
+    A1 = thick_lens(n_out, n1, n2, R1, -R2, thickness1)
+    A2 = thick_lens(n1, n2, n3, -R2, R3, thickness2)
+    A3 = thick_lens(n2, n3, n_out, R3, R4, thickness3)
 
+    return A3 @ A2 @ A1
+
+
+def aberration_system(refraction_NPK51_1, refraction_NKZFS4_1,refraction_SF15_1, refraction_NPK51_2, refraction_NKZFS4_2, refraction_SF15_2, n_out, color):
+    O = apocromat(refraction_NPK51_1["R1"], refraction_NKZFS4_1["R1"], refraction_SF15_1["R1"], refraction_SF15_1["R2"], refraction_NPK51_1["T"], refraction_NKZFS4_1["T"], refraction_SF15_1["T"], n_out, refraction_NPK51_1[color], refraction_NKZFS4_1[color], refraction_SF15_1[color])
+    T = traslation_matrix(refraction_NPK51_1["f"] + refraction_NPK51_2["f"], n_out)
+    E = apocromat(refraction_NPK51_2["R1"], refraction_NKZFS4_2["R1"], refraction_SF15_2["R1"], refraction_SF15_2["R2"], refraction_NPK51_2["T"], refraction_NKZFS4_2["T"], refraction_SF15_2["T"], n_out, refraction_NPK51_2[color], refraction_NKZFS4_2[color], refraction_SF15_2[color])
     return (E @ T) @ O
-
